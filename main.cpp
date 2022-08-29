@@ -4,22 +4,19 @@
 using namespace std;
 using std::stoi;
 
+#include "analizador.cpp"
+
 int main(){
+	Analizador analisis;
 
-	string instruccion = "";
-	string lectura;
-	string ex;
+	string entradacmd = "";
 
-	while(instruccion.compare("exit") != 0){
-		
-		cin >> instruccion;
-		stringstream input(instruccion); 
-
-		while (getline(input, lectura, ' ')){
-        	cout << "Un valor: " << lectura << endl;
-    	}
-		cout << instruccion << "\n" << endl;
-	}
+	while(entradacmd != "exit"){
+        cout << "[MIA]@Proyecto1:~$  ";
+        getline(cin,entradacmd);
+        analisis.analizar(entradacmd);
+    }
+    return 0;
 
 	return 0;
 }
