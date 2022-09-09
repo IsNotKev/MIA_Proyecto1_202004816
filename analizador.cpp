@@ -154,7 +154,13 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 nn.id = nn.id + to_string(cont);
                 nn.id = nn.id + nombre;
                 discos.push_back(nn);
-            }        
+            }    
+
+            cout << "   > Discos Montandos: " << endl;
+            for(int j = 0; j< discos.size();j++){
+                cout << "       - " << discos.at(j).id << endl;
+            }
+
         }else{
             cout << "Error montando partición: Parametros obligatorios no definidos." << endl;
         }
@@ -164,6 +170,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             param = parametros.at(i);
             if(param.find("-id->") == 0){
                 param = replace_txt(param, "-id->", "");
+                param = replace_txt(param, "\"", "");
                 cmd.param.Name = param;
             }else{
                 cout << "Parametro " << parametros.at(i) << " x" << endl;
@@ -179,6 +186,10 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                     cout << "Disco " << cmd.param.Name << " Desmontado." << endl;
                     break;
                 }
+            }
+            cout << "   > Discos Montandos: " << endl;
+            for(int j = 0; j< discos.size();j++){
+                cout << "       - " << discos.at(j).id << endl;
             }
         }else{
             cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
@@ -203,7 +214,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
         // Ejecucion de metodo
         if(cmd.param.Name != " " && cmd.param.t_formateo != " " && cmd.param.Formateo != " "){
             for(int i = 0; i<discos.size();i++){
-                if(discos.at(i).name == cmd.param.Name){
+                if(discos.at(i).id == cmd.param.Name){
                     discos.at(i).mbr.part1 = Partition();
                     discos.at(i).mbr.part2 = Partition();
                     discos.at(i).mbr.part3 = Partition();
@@ -213,7 +224,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 }
             }
         }else{
-            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+            cout << "Error formateando partición: Parametros obligatorios no definidos." << endl;
         }
     }else if(comando == "rep"){                                                 //REPORTE
         cmd.param.Comando = "rep";
@@ -249,7 +260,14 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                         cmd.reporteMBR(cmd.param,discos.at(i).mbr);
                         encontrado = true;
                         break;
-                    }                                   
+                    }else if (cmd.param.Name == "disk" || cmd.param.Name == "DISK"){
+                        cout << "   > Ejecutando Rep" << endl;
+                        cout << "   > Generando Reporte Disk" << endl;
+                        cmd.reporteDisk(cmd.param,discos.at(i).mbr);
+                        encontrado = true;
+                        break;
+                    }
+                                                      
                 }
             }
             if(!encontrado){

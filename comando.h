@@ -10,6 +10,7 @@
 #include <fstream>
 #include <stdio.h>
 #include <string.h>
+#include <cmath>
 
 using namespace std;
 
@@ -70,6 +71,7 @@ class Comando{
         vector<vector<int>> encontrarEspacio(int inicio, int tamano_total, int tamano, vector<Partition> particiones);
         vector<Partition> insertarParticion(int num, vector<Partition> particiones, Partition nueva);
         void reporteMBR(Parametros p, MBR mbr);
+        void reporteDisk(Parametros p, MBR mbr);
         //void escribir(string id, string nombre, string tel, string dir, string x);
         //void vertodo();
         //void verX(string x);

@@ -47,6 +47,93 @@ void Comando::identificacionCMD(Parametros p){
 }
 
 
+void Comando::reporteDisk(Parametros p, MBR mbr){
+    vector<Partition> particiones;
+    particiones.push_back(mbr.part1);
+    particiones.push_back(mbr.part2);
+    particiones.push_back(mbr.part3);
+    particiones.push_back(mbr.part4);
+
+    string text("digraph G {\n     node [shape=record];\n    A[label =<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD BGCOLOR=\"yellow\">MBR</TD>\n");
+
+    int inicio = sizeof(mbr) + 1;
+
+    for(int i = 0; i< 4 ; i++){
+        if(particiones.at(i).active == 'V'){
+
+            if(inicio!=particiones.at(i).start){
+                float t = particiones.at(i).start;
+                t = t-inicio;
+                float tt = mbr.tamano;
+                float percent = t/tt;
+                percent = percent * 100;           
+                text += "<TD>Libre<br/> "+to_string(percent)+"%</TD>\n";
+            }
+
+            if(particiones.at(i).tipo == 'P'){    
+                float t = particiones.at(i).tamano;
+                float tt = mbr.tamano;
+                float percent = t/tt;
+                percent = percent * 100;           
+                text += "<TD>Primaria<br/> "+to_string(percent)+"%</TD>\n";
+            }else if (particiones.at(i).tipo == 'E'){
+                text += "<TD><TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD COLSPAN=\"40\">Extendida</TD></TR><TR>\n";
+                for(int j = 0 ; j<20;j++){
+                    if(particiones.at(i).logicas[j].status == 'V'){
+                        float t = particiones.at(i).logicas[j].size;
+                        float tt = mbr.tamano;
+                        float percent = t/tt;
+                        percent = percent * 100;
+                        text += "<TD>EBR</TD>\n";
+                        text += "<TD>Lógica<br/> "+to_string(percent)+"%</TD>\n";
+                    }                  
+                }              
+                text += "</TR></TABLE></TD>\n";
+            }
+            inicio = particiones.at(i).start+particiones.at(i).tamano+1;
+        }else if(i==3){
+            float t = mbr.tamano;
+            t = t-inicio;
+            float tt = mbr.tamano;
+            float percent = t/tt;
+            percent = percent * 100;           
+            text += "<TD>Libre<br/> "+to_string(percent)+"%</TD>\n";
+        }
+        
+    }
+
+
+    text += "</TR></TABLE>>];\n}";
+
+    // Creando Carpetas
+    vector<string> rutas = split_txt(p.Ruta,'/');
+    string rr = "";
+    for(int i = 0; i< rutas.size()-1; i++){    
+        if(i!=0){
+            rr = rr + "/" + rutas.at(i);
+        }       
+    }
+    system(("mkdir -pv " + rr).c_str());
+
+    //Creando Dot
+    string filename2("mbr.dot");
+    fstream outfile;
+
+    outfile.open(filename2, std::ios_base::out);
+    if (!outfile.is_open()) {
+        //cout << "failed to open " << filename2 << '\n';
+    } else {
+        outfile.write(text.data(), text.size());
+        outfile.close();
+        //Graphviz y abrir
+        system(("dot -Tpng mbr.dot -o " + p.Ruta).c_str());
+        system(("eog " + p.Ruta).c_str());
+    }
+
+    cout << "\nPresione Enter Para Continuar." << endl;
+	getchar();
+}
+
 void Comando::reporteMBR(Parametros p, MBR mbr){
     string text("digraph G {\n     node [shape=record];\n    A[label =<<TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD BGCOLOR=\"purple\">REPORTE DE MBR</TD><TD BGCOLOR=\"purple\">               </TD></TR>\n");
     
@@ -59,7 +146,6 @@ void Comando::reporteMBR(Parametros p, MBR mbr){
 
     int cant = 0;
     string textra = "";
-
 
     vector<Partition> particiones;
     particiones.push_back(mbr.part1);
@@ -83,12 +169,17 @@ void Comando::reporteMBR(Parametros p, MBR mbr){
             f = particiones.at(i).tipo;
             if(f == "E"){
                 for(int j = 0;j<20;j++){
-                    cout << particiones.at(i).logicas[j].status << endl;
                     if(particiones.at(i).logicas[j].status == 'V'){
                         textra += "<TR><TD BGCOLOR=\"yellow\">Particion Logica</TD><TD BGCOLOR=\"yellow\">               </TD></TR>\n";
                         textra += "<TR><TD>part_status</TD><TD> V </TD></TR>\n";
-                        textra += "<TR><TD>part_next</TD><TD>"+to_string(particiones.at(i).logicas[j].next)+"</TD></TR>\n";
-                        textra += "<TR><TD>part_fit</TD><TD>"+to_string(particiones.at(i).logicas[j].fit)+"</TD></TR>\n";
+                        if(particiones.at(i).logicas[j].next == -1){
+                            textra += "<TR><TD>part_next</TD><TD>"+to_string(particiones.at(i).logicas[j].next)+"</TD></TR>\n";
+                        }else{
+                            textra += "<TR><TD>part_next</TD><TD>"+to_string(particiones.at(i).logicas[j].next + particiones.at(i).start)+"</TD></TR>\n";
+                        }
+                        
+                        f = particiones.at(i).logicas[j].fit;
+                        textra += "<TR><TD>part_fit</TD><TD>"+f+"</TD></TR>\n";
                         textra += "<TR><TD>part_start</TD><TD>"+to_string(particiones.at(i).logicas[j].start + particiones.at(i).start)+"</TD></TR>\n";
                         textra += "<TR><TD>part_size</TD><TD>"+to_string(particiones.at(i).logicas[j].size)+"</TD></TR>\n";
                         f = particiones.at(i).logicas[j].name;
@@ -96,6 +187,7 @@ void Comando::reporteMBR(Parametros p, MBR mbr){
                     }                   
                 }
             }
+            f = particiones.at(i).tipo;
             text += "<TR><TD>part_type</TD><TD>"+f+"</TD></TR>\n";
             f = particiones.at(i).fit;
             text += "<TR><TD>part_fit</TD><TD>"+f+"</TD></TR>\n";
@@ -294,7 +386,7 @@ void Comando::crearParticion(Parametros p){
                     if(n.part1.logicas[i].status == 'F'){
                         if(i>0){
                             int ultimo = i-1;
-                            nuevoEbr.start = n.part1.logicas[ultimo].start + n.part1.logicas[ultimo].size;
+                            nuevoEbr.start = n.part1.logicas[ultimo].start + n.part1.logicas[ultimo].size +1;
                             if(nuevoEbr.start + nuevoEbr.size <= n.part1.tamano){
                                 n.part1.logicas[ultimo].next = n.part1.logicas[ultimo].start + n.part1.logicas[ultimo].size+1;
                                 n.part1.logicas[i] = nuevoEbr;
@@ -318,7 +410,7 @@ void Comando::crearParticion(Parametros p){
                     if(n.part2.logicas[i].status == 'F'){
                         if(i>0){
                             int ultimo = i-1;
-                            nuevoEbr.start = n.part2.logicas[ultimo].start + n.part2.logicas[ultimo].size;
+                            nuevoEbr.start = n.part2.logicas[ultimo].start + n.part2.logicas[ultimo].size + 1;
                             if(nuevoEbr.start + nuevoEbr.size <= n.part2.tamano){
                                 n.part2.logicas[ultimo].next = n.part2.logicas[ultimo].start + n.part2.logicas[ultimo].size+1;
                                 n.part2.logicas[i] = nuevoEbr;
@@ -341,7 +433,7 @@ void Comando::crearParticion(Parametros p){
                     if(n.part3.logicas[i].status == 'F'){
                         if(i>0){
                             int ultimo = i-1;
-                            nuevoEbr.start = n.part3.logicas[ultimo].start + n.part3.logicas[ultimo].size;
+                            nuevoEbr.start = n.part3.logicas[ultimo].start + n.part3.logicas[ultimo].size +1;
                             if(nuevoEbr.start + nuevoEbr.size <= n.part3.tamano){
                                 n.part3.logicas[ultimo].next = n.part3.logicas[ultimo].start + n.part3.logicas[ultimo].size+1;
                                 n.part3.logicas[i] = nuevoEbr;
@@ -364,7 +456,7 @@ void Comando::crearParticion(Parametros p){
                     if(n.part4.logicas[i].status == 'F'){
                         if(i>0){
                             int ultimo = i-1;
-                            nuevoEbr.start = n.part4.logicas[ultimo].start + n.part4.logicas[ultimo].size;
+                            nuevoEbr.start = n.part4.logicas[ultimo].start + n.part4.logicas[ultimo].size +1;
                             if(nuevoEbr.start + nuevoEbr.size <= n.part4.tamano){
                                 n.part4.logicas[ultimo].next = n.part4.logicas[ultimo].start + n.part4.logicas[ultimo].size+1;
                                 n.part4.logicas[i] = nuevoEbr;
