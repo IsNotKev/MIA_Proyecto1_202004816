@@ -25,19 +25,31 @@ typedef struct{
     string Name = " ";
     string Formateo = " ";
     string t_formateo = " ";
+    string id = " ";
+    string ruta = " ";
 }Parametros;
+
+typedef struct{
+    char status = 'F';
+    char fit;
+    int start;
+    int size;
+    int next;
+    char name[16];
+}EBR;
 
 typedef struct{
     char active = 'F';
     char tipo;
     char fit;
     int start;
-    int tamano;
+    int tamano = 0;
     char name[16];
+    EBR logicas[20];
 }Partition;
 
 typedef struct{
-    int tamano;
+    int tamano = 0;
     time_t tiempo;
     int signature;
     char fit;
@@ -45,16 +57,8 @@ typedef struct{
     Partition part2;
     Partition part3;
     Partition part4;
+    char name[20];
 }MBR;
-
-typedef struct{
-    char status;
-    char fit;
-    int start;
-    int size;
-    int next;
-    char name[16];
-}EBR;
 
 class Comando{
     public:
@@ -63,6 +67,9 @@ class Comando{
         void crearArchivo(Parametros p);
         vector<string> split_txt(string entrada, char c);
         void crearParticion(Parametros p);
+        vector<vector<int>> encontrarEspacio(int inicio, int tamano_total, int tamano, vector<Partition> particiones);
+        vector<Partition> insertarParticion(int num, vector<Partition> particiones, Partition nueva);
+        void reporteMBR(Parametros p, MBR mbr);
         //void escribir(string id, string nombre, string tel, string dir, string x);
         //void vertodo();
         //void verX(string x);

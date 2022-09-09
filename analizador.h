@@ -13,12 +13,22 @@
 
 using namespace std;
 
+typedef struct{
+    string path;
+    string name;
+    string id;
+    MBR mbr;
+}DiscoMontado;
+
 class Analizador{
     public:
         Comando cmd;
+        vector<DiscoMontado> discos;
+        MBR leermbr(string ruta);
         vector<string> split_txt(string entrada, char c);
         string replace_txt(string str, const string& from, const string& to);
         void analizar(string entrada);
+        void exec(string ruta);
         void identificarParametros(string comando,vector<string> parametros);
 };
 

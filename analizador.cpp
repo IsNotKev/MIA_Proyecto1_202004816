@@ -130,8 +130,34 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 cout << "Parametro " << parametros.at(i) << " x" << endl;
             }
         }
+
         // Ejecucion de metodo
-        cmd.identificacionCMD(cmd.param);
+        if(cmd.param.Ruta != " " && cmd.param.Name != " "){
+            cout << "   > Ejecutando Mount" << endl;
+            MBR nuevo = leermbr(cmd.param.Ruta);
+            if(nuevo.tamano > 0){
+                DiscoMontado nn;
+                nn.mbr = nuevo;
+                nn.path = cmd.param.Ruta;
+                int cont = 1;
+                for(int i = 0; i<discos.size();i++){
+                    if(discos.at(i).path == nn.path){
+                        cont++;
+                    }
+                }
+                nn.name = cmd.param.Name;
+
+                vector<string> nombres = split_txt(cmd.param.Ruta, '/');
+                vector<string> name = split_txt(nombres.at(nombres.size()-1),'.');
+                string nombre = name.at(0);
+                nn.id = "16";
+                nn.id = nn.id + to_string(cont);
+                nn.id = nn.id + nombre;
+                discos.push_back(nn);
+            }        
+        }else{
+            cout << "Error montando partición: Parametros obligatorios no definidos." << endl;
+        }
     }else if(comando == "unmount"){                                         // UNMOUNT
         cmd.param.Comando = "unmount";  
         for(int i=0; i<parametros.size(); i++){
@@ -144,7 +170,19 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             }
         }
         // Ejecucion de metodo
-        cmd.identificacionCMD(cmd.param);
+        if(cmd.param.Name != " "){
+            cout << "   > Ejecutando Unmount" << endl;
+            for(int i = 0; i<discos.size();i++){
+                if(discos.at(i).id == cmd.param.Name){
+                    auto elem_to_remove = discos.begin() + i;
+                    discos.erase(elem_to_remove);
+                    cout << "Disco " << cmd.param.Name << " Desmontado." << endl;
+                    break;
+                }
+            }
+        }else{
+            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+        }
     }else if(comando == "mkfs"){                                         // MKFS
         cmd.param.Comando = "mkfs";  
         for(int i=0; i<parametros.size(); i++){
@@ -163,13 +201,131 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             }
         }
         // Ejecucion de metodo
-        cmd.identificacionCMD(cmd.param);
+        if(cmd.param.Name != " " && cmd.param.t_formateo != " " && cmd.param.Formateo != " "){
+            for(int i = 0; i<discos.size();i++){
+                if(discos.at(i).name == cmd.param.Name){
+                    discos.at(i).mbr.part1 = Partition();
+                    discos.at(i).mbr.part2 = Partition();
+                    discos.at(i).mbr.part3 = Partition();
+                    discos.at(i).mbr.part4 = Partition();
+                    cout << "Disco " << cmd.param.Name << " Formateado." << endl;
+                    break;
+                }
+            }
+        }else{
+            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+        }
+    }else if(comando == "rep"){                                                 //REPORTE
+        cmd.param.Comando = "rep";
+        for(int i=0; i<parametros.size(); i++){
+            param = parametros.at(i);
+            if(param.find("-path->") == 0){
+                param = replace_txt(param, "-path->", "");
+                param = replace_txt(param, "\"", "");
+                cmd.param.Ruta = param;
+            }else if(param.find("-name->") == 0){
+                param = replace_txt(param, "-name->", "");
+                cmd.param.Name = param;
+            }else if(param.find("-id->") == 0){
+                param = replace_txt(param, "-id->", "");
+                param = replace_txt(param, "\"", "");
+                cmd.param.id = param;
+            }else if(param.find("-ruta->") == 0){
+                param = replace_txt(param, "-ruta->", "");
+                cmd.param.ruta = param;
+            }else{
+                cout << "Parametro " << parametros.at(i) << " x" << endl;
+            }
+        }
+
+        // Ejecucion de metodo
+        bool encontrado = false;
+        if(cmd.param.Name != " " && cmd.param.Ruta != " " && cmd.param.id != " "){
+            for(int i = 0; i<discos.size();i++){
+                if(discos.at(i).id == cmd.param.id){
+                    if(cmd.param.Name == "mbr" || cmd.param.Name == "MBR"){
+                        cout << "   > Ejecutando Rep" << endl;
+                        cout << "   > Generando Reporte MBR" << endl;
+                        cmd.reporteMBR(cmd.param,discos.at(i).mbr);
+                        encontrado = true;
+                        break;
+                    }                                   
+                }
+            }
+            if(!encontrado){
+                cout << "   > Disco " << cmd.param.id <<  " No encontrado" <<endl;
+            }
+        }else{
+            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+        }
     }else if (comando == "pause"){       
         cmd.param.Comando = "pause";                                     // PAUSE
         cmd.identificacionCMD(cmd.param);
+    }else if (comando == "exec"){                                      // Exec
+        cmd.param.Comando = "exec";
+        for(int i=0; i<parametros.size(); i++){
+            param = parametros.at(i);
+            if(param.find("-path->") == 0){
+                param = replace_txt(param, "-path->", "");
+                param = replace_txt(param, "\"", "");
+                cmd.param.Ruta = param;
+            }else{
+                cout << "Parametro " << parametros.at(i) << " x" << endl;
+            }
+        }
+        // Ejecución del Metodo
+        if(cmd.param.Ruta != " "){
+            exec(cmd.param.Ruta);
+        }else{
+            cout << "Error en Exec: Parametros obligatorios no definidos." << endl;
+        }
+
     }else if (comando == "exit"){                                           // EXIT
         cout << "Byee." << endl;
+    }else if (comando == "" || comando.at(0) == '#'){
     }else{
         cout << "Comando -" << comando << "- No Reconocido.\n" << endl;
     }
+}
+
+void Analizador::exec(string ruta){
+    FILE *archivo;
+    long medida;
+    char *texto;
+    if (archivo = fopen(ruta.c_str(), "r")){
+        fseek(archivo , 0 , SEEK_END);
+        medida = ftell(archivo);
+        rewind(archivo);
+
+        texto = (char*) malloc (sizeof(char)*medida);
+        fread(texto, medida+1, 1, archivo);
+
+        fclose(archivo);
+
+        vector<string> instrucciones = split_txt(texto,'\n');
+
+        cout << "   > Ejecutando Exec" << endl;
+
+        for(int i = 0; i<instrucciones.size(); i++){
+            cout << instrucciones.at(i) << endl;
+            analizar(instrucciones.at(i));
+        }
+
+    }else{
+        cout << "Archivo no existe." << endl;
+    }
+}
+
+MBR Analizador::leermbr(string ruta){
+    FILE *file;
+    MBR ll;
+    if (file = fopen(ruta.c_str(), "rb+")){
+        fseek(file,0,SEEK_SET);
+        fread(&ll,sizeof(MBR),1,file);
+        fclose(file);
+        return ll;
+    }else{
+        cout << "Disco Inexistente." << endl;
+    }
+    return ll;
 }
