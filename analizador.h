@@ -20,9 +20,16 @@ typedef struct{
     MBR mbr;
 }DiscoMontado;
 
+typedef struct{
+    char log = 'F';
+    string us;
+    string disco;
+}Log;
+
 class Analizador{
     public:
         Comando cmd;
+        Log logueado;
         vector<DiscoMontado> discos;
         MBR leermbr(string ruta);
         vector<string> split_txt(string entrada, char c);

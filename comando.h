@@ -28,6 +28,7 @@ typedef struct{
     string t_formateo = " ";
     string id = " ";
     string ruta = " ";
+    string contra = " ";
 }Parametros;
 
 typedef struct{
@@ -59,6 +60,7 @@ typedef struct{
     Partition part3;
     Partition part4;
     char name[20];
+    char fs;
 }MBR;
 
 class Comando{
@@ -72,11 +74,7 @@ class Comando{
         vector<Partition> insertarParticion(int num, vector<Partition> particiones, Partition nueva);
         void reporteMBR(Parametros p, MBR mbr);
         void reporteDisk(Parametros p, MBR mbr);
-        //void escribir(string id, string nombre, string tel, string dir, string x);
-        //void vertodo();
-        //void verX(string x);
-        //void eliminarX(string x);
-        //void mostrar_struct(Ejemplo ejm);
+        void crearUser(string ruta);
 };
 
 #endif // COMANDO_H

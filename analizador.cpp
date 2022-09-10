@@ -200,11 +200,12 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             param = parametros.at(i);
             if(param.find("-id->") == 0){
                 param = replace_txt(param, "-id->", "");
+                param = replace_txt(param, "\"", "");
                 cmd.param.Name = param;
-            }if(param.find("-type->") == 0){
+            }else if(param.find("-type->") == 0){
                 param = replace_txt(param, "-type->", "");
                 cmd.param.t_formateo = param;
-            }if(param.find("-fs->") == 0){
+            }else if(param.find("-fs->") == 0){
                 param = replace_txt(param, "-fs->", "");
                 cmd.param.Formateo = param;
             }else{
@@ -212,17 +213,43 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             }
         }
         // Ejecucion de metodo
-        if(cmd.param.Name != " " && cmd.param.t_formateo != " " && cmd.param.Formateo != " "){
+        bool encontrado = false;
+        if(cmd.param.Name != " "){
             for(int i = 0; i<discos.size();i++){
                 if(discos.at(i).id == cmd.param.Name){
-                    discos.at(i).mbr.part1 = Partition();
-                    discos.at(i).mbr.part2 = Partition();
-                    discos.at(i).mbr.part3 = Partition();
-                    discos.at(i).mbr.part4 = Partition();
-                    cout << "Disco " << cmd.param.Name << " Formateado." << endl;
-                    break;
+                    if(cmd.param.t_formateo == "full" || cmd.param.t_formateo == "fast" || cmd.param.t_formateo == " "){
+                        if(cmd.param.Formateo == "2fs" || cmd.param.Formateo == " "){
+                            discos.at(i).mbr.part1 = Partition();
+                            discos.at(i).mbr.part2 = Partition();
+                            discos.at(i).mbr.part3 = Partition();
+                            discos.at(i).mbr.part4 = Partition();
+                            discos.at(i).mbr.fs = '2';
+                            cout << "   > Disco " << cmd.param.Name << " Formateado EXT2." << endl;
+                            cmd.crearUser(discos.at(i).path);
+                            encontrado = true;
+                        }else if (cmd.param.Formateo == "3fs"){
+                            discos.at(i).mbr.part1 = Partition();
+                            discos.at(i).mbr.part2 = Partition();
+                            discos.at(i).mbr.part3 = Partition();
+                            discos.at(i).mbr.part4 = Partition();
+                            discos.at(i).mbr.fs = '3';
+                            cout << "   > Disco " << cmd.param.Name << " Formateado EXT3." << endl;
+                            cmd.crearUser(discos.at(i).path);
+                            encontrado = true;
+                        }else{
+                            cout << "   > Sistema de archivo no encontrado." << endl;
+                        }
+                        break;
+                    }else{
+                        cout << "   > Tipo de formateo no encontrado" << endl;
+                    }
                 }
             }
+
+            if(!encontrado){
+                cout << "   > Disco No Encontrado." << endl;
+            }
+
         }else{
             cout << "   > Error formateando partición: Parametros obligatorios no definidos." << endl;
         }
@@ -291,11 +318,58 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
+
         // Ejecución del Metodo
         if(cmd.param.Ruta != " "){
             exec(cmd.param.Ruta);
         }else{
             cout << "   > Error en Exec: Parametros obligatorios no definidos." << endl;
+        }
+
+    }else if (comando == "login"){                                           // LOGIN
+        cmd.param.Comando = "login";
+        for(int i=0; i<parametros.size(); i++){
+            param = parametros.at(i);
+            if(param.find("-pass->") == 0){
+                param = replace_txt(param, "-pass->", "");
+                cmd.param.contra = param;
+            }else if(param.find("-usr->") == 0){
+                param = replace_txt(param, "-usr->", "");
+                cmd.param.Name = param;
+            }else if(param.find("-id->") == 0){
+                param = replace_txt(param, "-id->", "");
+                param = replace_txt(param, "\"", "");
+                cmd.param.id = param;
+            }else{
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
+            }
+        }
+
+        // Ejecución del Metodo
+        if(cmd.param.contra != " " && cmd.param.Name != " " && cmd.param.id != " "){
+            if(logueado.log == 'F'){
+                if(cmd.param.Name == "root" && cmd.param.contra == "123"){
+                    cout << "Logueado root" << endl;
+                }else{
+                    cout << "   > Error en Login: Usuario y/o contraseña incorrecta." << endl;
+                }
+            }else{
+                cout << "   > Error en Login: Existe una sesión activa.";
+            }
+        }else{
+            cout << "   > Error en Login: Parametros obligatorios no definidos." << endl;
+        }
+
+    }else if (comando == "logout"){                                           // LOGOUT
+        cmd.param.Comando = "logout";
+        for(int i=0; i<parametros.size(); i++){
+            cout << "   > Parametro " << parametros.at(i) << " x" << endl;
+        }
+
+        if(logueado.log == 'V'){
+            logueado = Log();
+        }else{
+            cout << "   > Error en Logout: No hay sesión activa." << endl;
         }
 
     }else if (comando == "exit"){                                           // EXIT

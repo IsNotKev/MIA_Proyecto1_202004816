@@ -47,6 +47,29 @@ void Comando::identificacionCMD(Parametros p){
 }
 
 
+void Comando::crearUser(string ruta){
+
+    string text("1, G, root\n1, U, root, root, 123\n");
+
+    vector<string> rutas = split_txt(ruta,'/');
+    string rr = "";
+    for(int i = 1; i<rutas.size()-2; i++){    
+        rr = rr + "/" + rutas.at(i);    
+    }
+    rr += "/users.txt";
+    //Creando Dot
+    string filename2(rr);
+    fstream outfile;
+    cout << rr << endl;
+    outfile.open(filename2, std::ios_base::out);
+    if (!outfile.is_open()) {
+        cout << "failed to open " << filename2 << '\n';
+    } else {
+        outfile.write(text.data(), text.size());
+        outfile.close();
+    }
+}
+
 void Comando::reporteDisk(Parametros p, MBR mbr){
     vector<Partition> particiones;
     particiones.push_back(mbr.part1);
