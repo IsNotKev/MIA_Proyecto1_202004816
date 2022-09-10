@@ -61,7 +61,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
         // Ejecucion de metodo
@@ -75,7 +75,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
         // Ejecucion de metodo
@@ -110,7 +110,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "-add->", "");
                 cmd.param.Add = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "    > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
         // Ejecucion de metodo
@@ -127,7 +127,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "-name->", "");
                 cmd.param.Name = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << " > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
 
@@ -162,7 +162,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             }
 
         }else{
-            cout << "Error montando partición: Parametros obligatorios no definidos." << endl;
+            cout << "   > Error montando partición: Parametros obligatorios no definidos." << endl;
         }
     }else if(comando == "unmount"){                                         // UNMOUNT
         cmd.param.Comando = "unmount";  
@@ -173,7 +173,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "\"", "");
                 cmd.param.Name = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
         // Ejecucion de metodo
@@ -183,7 +183,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 if(discos.at(i).id == cmd.param.Name){
                     auto elem_to_remove = discos.begin() + i;
                     discos.erase(elem_to_remove);
-                    cout << "Disco " << cmd.param.Name << " Desmontado." << endl;
+                    cout << "   > Disco " << cmd.param.Name << " Desmontado." << endl;
                     break;
                 }
             }
@@ -192,7 +192,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 cout << "       - " << discos.at(j).id << endl;
             }
         }else{
-            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+            cout << "   > Error desmontando partición: Parametros obligatorios no definidos." << endl;
         }
     }else if(comando == "mkfs"){                                         // MKFS
         cmd.param.Comando = "mkfs";  
@@ -224,7 +224,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 }
             }
         }else{
-            cout << "Error formateando partición: Parametros obligatorios no definidos." << endl;
+            cout << "   > Error formateando partición: Parametros obligatorios no definidos." << endl;
         }
     }else if(comando == "rep"){                                                 //REPORTE
         cmd.param.Comando = "rep";
@@ -245,7 +245,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "-ruta->", "");
                 cmd.param.ruta = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
 
@@ -274,7 +274,7 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 cout << "   > Disco " << cmd.param.id <<  " No encontrado" <<endl;
             }
         }else{
-            cout << "Error desmontando partición: Parametros obligatorios no definidos." << endl;
+            cout << "   > Error en Reporte: Parametros obligatorios no definidos." << endl;
         }
     }else if (comando == "pause"){       
         cmd.param.Comando = "pause";                                     // PAUSE
@@ -288,21 +288,22 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
             }else{
-                cout << "Parametro " << parametros.at(i) << " x" << endl;
+                cout << "   > Parametro " << parametros.at(i) << " x" << endl;
             }
         }
         // Ejecución del Metodo
         if(cmd.param.Ruta != " "){
             exec(cmd.param.Ruta);
         }else{
-            cout << "Error en Exec: Parametros obligatorios no definidos." << endl;
+            cout << "   > Error en Exec: Parametros obligatorios no definidos." << endl;
         }
 
     }else if (comando == "exit"){                                           // EXIT
-        cout << "Byee." << endl;
+        cout << "   > Byee." << endl;
     }else if (comando == "" || comando.at(0) == '#'){
+        
     }else{
-        cout << "Comando -" << comando << "- No Reconocido.\n" << endl;
+        cout << "   > Comando -" << comando << "- No Reconocido.\n" << endl;
     }
 }
 

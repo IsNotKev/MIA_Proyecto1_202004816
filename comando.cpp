@@ -10,7 +10,7 @@ void Comando::identificacionCMD(Parametros p){
         }
     }else if(p.Comando == "rmdisk"){
         if(p.Ruta != " "){ 
-            cout << "Ejecutando RMDISK" << endl;
+            cout << "   > Ejecutando RMDISK" << endl;
             system(("rm -i " + p.Ruta).c_str());
         }else{
             cout << "Error eliminando Disco: Parametros obligatorios no definidos." << endl;
@@ -77,7 +77,11 @@ void Comando::reporteDisk(Parametros p, MBR mbr){
                 percent = percent * 100;           
                 text += "<TD>Primaria<br/> "+to_string(percent)+"%</TD>\n";
             }else if (particiones.at(i).tipo == 'E'){
-                text += "<TD><TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD COLSPAN=\"40\">Extendida</TD></TR><TR>\n";
+                float t = particiones.at(i).tamano;
+                float tt = mbr.tamano;
+                float percent = t/tt;
+                percent = percent * 100;
+                text += "<TD><TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"0\"><TR><TD COLSPAN=\"40\">Extendida "+to_string(percent)+"%</TD></TR><TR>\n";
                 for(int j = 0 ; j<20;j++){
                     if(particiones.at(i).logicas[j].status == 'V'){
                         float t = particiones.at(i).logicas[j].size;
@@ -240,24 +244,52 @@ void Comando::crearParticion(Parametros p){
 
     if(p.Delete != " "){
         if(p.Delete == "full" || p.Delete == "fast"){
-            if(n.part1.name == p.Name){
-                n.part1 = Partition();
-            }else if(n.part2.name == p.Name){
-                n.part2 = Partition();
-            }else if(n.part3.name == p.Name){
-                n.part3 = Partition();
-            }else if(n.part4.name == p.Name){
-                n.part4 = Partition();
-            }else{
-                cout << "La particion " << p.Name << " no existe" << endl;
+            vector<Partition> particiones;
+            particiones.push_back(n.part1);
+            particiones.push_back(n.part2);
+            particiones.push_back(n.part3);
+            particiones.push_back(n.part4);
+
+            bool encontrado = false;
+
+            for(int i = 0;i <4;i++){
+                if(particiones.at(i).name == p.Name){
+                    particiones.at(i) = Partition();
+                    encontrado = true;
+                    break;
+                }
             }
+            
+            if(!encontrado){
+                for(int i = 0;i <4;i++){
+                    if(particiones.at(i).tipo == 'E'){
+                        for(int j = 0; j<20 ; j++){
+                            if(particiones.at(i).logicas[j].name == p.Name){
+                                particiones.at(i).logicas[j] = EBR();
+                                encontrado = true;
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if(!encontrado){
+                cout << "   > Particion " << p.Name << " no encontrada." << endl;
+            }
+
+            n.part1 = particiones.at(0);
+            n.part2 = particiones.at(1);
+            n.part3 = particiones.at(2);
+            n.part4 = particiones.at(3);
         }else{
             cout << "Parametro en delete no reconocido." << endl;
         }
     }else if(p.Add != " "){
         // Calculo Tamaño Agregado
         int size_file = 0;
-        int tamano = atoi(p.Tamano.c_str());
+        int tamano = atoi(p.Add.c_str());
 
         // Dimensional
         char dimen = p.Dimensional.at(0);
@@ -271,63 +303,74 @@ void Comando::crearParticion(Parametros p){
             cout << "Error -> dimensional no reconocida." << endl;
         }
 
-        if(n.part1.name == p.Name){
-            if((n.part1.tamano+tamano > 0)){
-                if(n.part2.active == 'V'){
-                    if((n.part1.tamano+tamano+n.part1.start<n.part2.start)){
-                        n.part1.tamano += tamano;
+        vector<Partition> particiones;
+        particiones.push_back(n.part1);
+        particiones.push_back(n.part2);
+        particiones.push_back(n.part3);
+        particiones.push_back(n.part4);
+
+        bool encontrado = false;
+
+        for(int i = 0; i<4; i++){
+            if(particiones.at(i).active == 'V'){
+                if(particiones.at(i).name == p.Name){
+                    encontrado = true;
+                    if(i==3){
+                        int tt = particiones.at(i).tamano+tamano+particiones.at(i).start;
+                        if (tt<=n.tamano && particiones.at(i).tamano+tamano>=0){
+                            particiones.at(i).tamano += tamano;
+                            break;
+                        }else{
+                            cout << "   > No se puede agregar más espacio" << endl;
+                        }
+                    }else{
+                        int fin = 0;
+                        for(int j = i+1; j<4 ; j++){
+                            if(particiones.at(j).active == 'V'){
+                                fin = particiones.at(j).start;
+                                break;
+                            }else if (j==3){
+                                fin = n.tamano;
+                                break;
+                            }                            
+                        }
+                        int tt = particiones.at(i).tamano;
+                        tt += tamano;
+                        tt += particiones.at(i).start;
+                        cout << tt << "-" << fin << endl;
+                        if(tt<=fin && particiones.at(i).tamano + tamano >= 0){
+                            particiones.at(i).tamano += tamano;
+                            break;
+                        }else{
+                            cout << "   > No se puede agregar más espacio" << endl;
+                        }
                     }
-                }else if (n.part3.active == 'V'){
-                    if((n.part1.tamano+tamano+n.part1.start<n.part3.start)){
-                        n.part1.tamano += tamano;
-                    }
-                }else if (n.part4.active == 'V'){
-                    if((n.part1.tamano+tamano+n.part1.start<n.part4.start)){
-                        n.part1.tamano += tamano;
-                    }
-                }else if (n.part1.tamano+tamano+n.part1.start<n.tamano){
-                    n.part1.tamano += tamano;
-                }           
-            }else{
-                cout << "No se puede cambiar el tamaño de " << p.Name << endl;
-            }        
-        }else if(n.part2.name == p.Name){
-            if((n.part2.tamano+tamano > 0)){
-                if (n.part3.active == 'V'){
-                    if((n.part2.tamano+tamano+n.part2.start<n.part3.start)){
-                        n.part2.tamano += tamano;
-                    }
-                }else if (n.part4.active == 'V'){
-                    if((n.part2.tamano+tamano+n.part2.start<n.part4.start)){
-                        n.part2.tamano += tamano;
-                    }
-                }else if (n.part2.tamano+tamano+n.part2.start<n.tamano){
-                    n.part2.tamano += tamano;
-                }     
-            }else{
-                cout << "No se puede cambiar el tamaño de " << p.Name << endl;
+                }
             }
-        }else if(n.part3.name == p.Name){
-            if((n.part3.tamano+tamano > 0)){
-                if (n.part4.active == 'V'){
-                    if((n.part3.tamano+tamano+n.part3.start<n.part4.start)){
-                        n.part3.tamano += tamano;
-                    }
-                }else if (n.part3.tamano+tamano+n.part3.start<n.tamano){
-                    n.part3.tamano += tamano;
-                } 
-            }else{
-                cout << "No se puede cambiar el tamaño de " << p.Name << endl;
-            }
-        }else if(n.part4.name == p.Name){
-            if((n.part4.tamano+tamano > 0) && (n.part4.tamano+tamano+n.part4.start<n.tamano)){
-                n.part4.tamano += tamano;
-            }else{
-                cout << "No se puede cambiar el tamaño de " << p.Name << endl;
-            }
-        }else{
-            cout << "La particion " << p.Name << " no existe" << endl;
         }
+
+        if(!encontrado){
+            for(int i = 0; i<4 ; i++){
+                if(particiones.at(i).active == 'V'){
+                    if(particiones.at(i).tipo == 'E'){
+                        for(int j = 0 ; j<20 ; j++){
+                            if(particiones.at(i).logicas[j].status == 'V'){
+                                if (particiones.at(i).logicas[j].name == p.Name){
+                                    
+                                }                               
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+
+        n.part1 = particiones.at(0);
+        n.part2 = particiones.at(1);
+        n.part3 = particiones.at(2);
+        n.part4 = particiones.at(3);
 
     }else{
         Partition nuevaP;
@@ -503,46 +546,54 @@ void Comando::crearParticion(Parametros p){
                 ubicacion.push_back(0);
                 ubicacion.push_back(0);
 
-                //Eligiendo mejor espacio
-                for(int i = 0; i<espacios.size(); i++){
-                    if((ubicacion.at(1)-ubicacion.at(0))>((espacios.at(i).at(1)-espacios.at(i).at(0)))){
-                        ubicacion = espacios.at(i);
-                    }
-                }
-
-                if(ubicacion.at(1) == n.tamano && particiones.at(3).active == 'V'){
-                    vector<Partition> aux;
-                    int cont = 0;
-                    while (cont<4){
-                        if(particiones.at(cont).active == 'V'){
-                            aux.push_back(particiones.at(cont));
+                
+                
+                if(espacios.size() > 0){
+                    //Eligiendo mejor espacio
+                    for(int i = 0; i<espacios.size(); i++){
+                        if((ubicacion.at(1)-ubicacion.at(0))>((espacios.at(i).at(1)-espacios.at(i).at(0)))){
+                            ubicacion = espacios.at(i);
                         }
-                        cont++;
                     }
-                    aux.push_back(nuevaP);
-                    particiones = aux;
-                }
-                int inicio = sizeof(n);
-                for(int i = 0 ; i < 4; i++){
-                    if(inicio == ubicacion.at(0) && particiones.at(i).active == 'F'){
-                        nuevaP.start = inicio + 1;
-                        particiones.at(i) = nuevaP;
-                    }else if (particiones.at(i).active == 'V'){
-                        if(ubicacion.at(1) == particiones.at(i).start){
+
+                    if(ubicacion.at(1) == n.tamano && particiones.at(3).active == 'V'){
+                        vector<Partition> aux;
+                        int cont = 0;
+                        while (cont<4){
+                            if(particiones.at(cont).active == 'V'){
+                                aux.push_back(particiones.at(cont));
+                            }
+                            cont++;
+                        }
+                        aux.push_back(nuevaP);
+                        particiones = aux;
+                    }
+                    int inicio = sizeof(n);               
+                    for(int i = 0 ; i < 4; i++){
+                        
+                        if(inicio == ubicacion.at(0) && particiones.at(i).active == 'F'){
                             nuevaP.start = inicio + 1;
-                            particiones = insertarParticion(i,particiones,nuevaP);
-                        }else{
-                            inicio = particiones.at(i).start + particiones.at(i).tamano;
+                            particiones.at(i) = nuevaP;
+                            break;
+                        }else if (particiones.at(i).active == 'V'){
+                            if(ubicacion.at(1) == particiones.at(i).start){
+                                nuevaP.start = inicio + 1;
+                                cout << "Llego a insertar" << endl;
+                                particiones = insertarParticion(i,particiones,nuevaP);
+                                break;
+                            }
+                            inicio = particiones.at(i).start + particiones.at(i).tamano;                       
                         }
                         
                     }
-                    
-                }
 
-                n.part1 = particiones.at(0);
-                n.part2 = particiones.at(1);
-                n.part3 = particiones.at(2);
-                n.part4 = particiones.at(3);
+                    n.part1 = particiones.at(0);
+                    n.part2 = particiones.at(1);
+                    n.part3 = particiones.at(2);
+                    n.part4 = particiones.at(3);
+                }else{
+                    cout << "No cabe " << nuevaP.name << endl;
+                }
 
             }else if(n.fit == 'F'){
                 vector<vector<int>> espacios = encontrarEspacio(sizeof(n),n.tamano,nuevaP.tamano,particiones);
@@ -589,54 +640,58 @@ void Comando::crearParticion(Parametros p){
                     cout << "No cabe " << nuevaP.name << endl;
                 }
                 
-
-
             }else if(n.fit == 'W'){
                 vector<vector<int>> espacios = encontrarEspacio(sizeof(n),n.tamano,nuevaP.tamano,particiones);
                 vector<int> ubicacion;
                 ubicacion.push_back(0);
-                ubicacion.push_back(0);
-                
-                //Eligiendo peor espacio
-                for(int i = 0; i<espacios.size(); i++){
-                    if((ubicacion.at(1)-ubicacion.at(0))<((espacios.at(i).at(1)-espacios.at(i).at(0)))){
-                        ubicacion = espacios.at(i);
-                    }
-                }
+                ubicacion.push_back(0);           
 
-                if(ubicacion.at(1) == n.tamano && particiones.at(3).active == 'V'){
-                    vector<Partition> aux;
-                    int cont = 0;
-                    while (cont<4){
-                        if(particiones.at(cont).active == 'V'){
-                            aux.push_back(particiones.at(cont));
+                if(espacios.size() > 0){
+                    //Eligiendo peor espacio
+                    for(int i = 0; i<espacios.size(); i++){
+                        if((ubicacion.at(1)-ubicacion.at(0))<((espacios.at(i).at(1)-espacios.at(i).at(0)))){
+                            ubicacion = espacios.at(i);
                         }
-                        cont++;
                     }
-                    aux.push_back(nuevaP);
-                    particiones = aux;
-                }
-                int inicio = sizeof(n);
-                for(int i = 0 ; i < 4; i++){
-                    if(inicio == ubicacion.at(0) && particiones.at(i).active == 'F'){
-                        nuevaP.start = inicio + 1;
-                        particiones.at(i) = nuevaP;
-                    }else if (particiones.at(i).active == 'V'){
-                        if(ubicacion.at(1) == particiones.at(i).start){
+
+                    if(ubicacion.at(1) == n.tamano && particiones.at(3).active == 'V'){
+                        vector<Partition> aux;
+                        int cont = 0;
+                        while (cont<4){
+                            if(particiones.at(cont).active == 'V'){
+                                aux.push_back(particiones.at(cont));
+                            }
+                            cont++;
+                        }
+                        aux.push_back(nuevaP);
+                        particiones = aux;
+                    }
+                    int inicio = sizeof(n);               
+                    for(int i = 0 ; i < 4; i++){
+                        
+                        if(inicio == ubicacion.at(0) && particiones.at(i).active == 'F'){
                             nuevaP.start = inicio + 1;
-                            particiones = insertarParticion(i,particiones,nuevaP);
-                        }else{
-                            inicio = particiones.at(i).start + particiones.at(i).tamano;
+                            particiones.at(i) = nuevaP;
+                            break;
+                        }else if (particiones.at(i).active == 'V'){
+                            if(ubicacion.at(1) == particiones.at(i).start){
+                                nuevaP.start = inicio + 1;
+                                cout << "Llego a insertar" << endl;
+                                particiones = insertarParticion(i,particiones,nuevaP);
+                                break;
+                            }
+                            inicio = particiones.at(i).start + particiones.at(i).tamano;                       
                         }
                         
                     }
-                    
-                }
 
-                n.part1 = particiones.at(0);
-                n.part2 = particiones.at(1);
-                n.part3 = particiones.at(2);
-                n.part4 = particiones.at(3);
+                    n.part1 = particiones.at(0);
+                    n.part2 = particiones.at(1);
+                    n.part3 = particiones.at(2);
+                    n.part4 = particiones.at(3);
+                }else{
+                    cout << "No cabe " << nuevaP.name << endl;
+                }
             }
         }
 
