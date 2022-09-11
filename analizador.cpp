@@ -56,7 +56,21 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
             } else if(param.find("-u->") == 0){
                 param = replace_txt(param, "-u->", "");
                 cmd.param.Dimensional = param;
-            } else if(param.find("-path->") == 0){
+            } else if(param.find("-path->\"") == 0){
+                param = replace_txt(param, "-path->", "");
+
+                string ruta = param;
+                int cont = i+1;
+                while(ruta.at(ruta.size() -1) != '\"'){
+                    ruta += " " + parametros.at(cont);
+                    cont++;
+                }
+
+                i = cont -1;
+
+                ruta = replace_txt(ruta, "\"", "");
+                cmd.param.Ruta = ruta;
+            }else if(param.find("-path->") == 0){
                 param = replace_txt(param, "-path->", "");
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
@@ -70,7 +84,21 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
         cmd.param.Comando = "rmdisk";
         for(int i=0; i<parametros.size(); i++){
             param = parametros.at(i);
-            if(param.find("-path->") == 0){
+            if(param.find("-path->\"") == 0){
+                param = replace_txt(param, "-path->", "");
+
+                string ruta = param;
+                int cont = i+1;
+                while(ruta.at(ruta.size() -1) != '\"'){
+                    ruta += " " + parametros.at(cont);
+                    cont++;
+                }
+
+                i = cont -1;
+
+                ruta = replace_txt(ruta, "\"", "");
+                cmd.param.Ruta = ruta;
+            }else if(param.find("-path->") == 0){
                 param = replace_txt(param, "-path->", "");
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
@@ -310,7 +338,21 @@ void Analizador::identificarParametros(string comando, vector<string> parametros
         cmd.param.Comando = "exec";
         for(int i=0; i<parametros.size(); i++){
             param = parametros.at(i);
-            if(param.find("-path->") == 0){
+             if(param.find("-path->\"") == 0){
+                param = replace_txt(param, "-path->", "");
+
+                string ruta = param;
+                int cont = i+1;
+                while(ruta.at(ruta.size() -1) != '\"'){
+                    ruta += " " + parametros.at(cont);
+                    cont++;
+                }
+
+                i = cont -1;
+
+                ruta = replace_txt(ruta, "\"", "");
+                cmd.param.Ruta = ruta;
+            }else if(param.find("-path->") == 0){
                 param = replace_txt(param, "-path->", "");
                 param = replace_txt(param, "\"", "");
                 cmd.param.Ruta = param;
@@ -405,7 +447,7 @@ void Analizador::exec(string ruta){
         }
 
     }else{
-        cout << "Archivo no existe." << endl;
+        cout << "Archivo no existe." << ruta << endl;
     }
 }
 

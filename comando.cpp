@@ -16,7 +16,7 @@ void Comando::identificacionCMD(Parametros p){
             cout << "Error eliminando Disco: Parametros obligatorios no definidos." << endl;
         }
     }else if(p.Comando == "fdisk"){
-        if(p.Tamano != " " && p.Ruta != " " && p.Name != " "){ 
+        if((p.Tamano != " " && p.Ruta != " " && p.Name != " ") || (p.Delete != " ") || p.Add != " "){ 
             cout << "   > Ejecutando FDISK" << endl;
             crearParticion(p);
         }else{
@@ -427,11 +427,11 @@ void Comando::crearParticion(Parametros p){
 
         // FIT
         string f = p.Ajuste;
-        if (f == "BF" || f == "bf"){
+        if (f == "BestFit" || f == "bestfit"){
             nuevaP.fit = 'B';
-        }else if (f == "FF" || f == "ff" || f == " "){
+        }else if (f == "FirstFit" || f == "firstfit" || f == " "){
             nuevaP.fit = 'F';
-        }else if (f == "WF" || f == "wf"){
+        }else if (f == "WorstFit" || f == "worstfitf"){
             nuevaP.fit = 'W';
         }else{
             cout << "Error -> Ajuste no reconocida." << endl;
